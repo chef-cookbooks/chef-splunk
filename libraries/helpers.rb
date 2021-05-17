@@ -110,7 +110,7 @@ module ChefSplunk
 
     def splunk_login_successful?
       return false unless splunk_installed?
-      login = shell_out(splunk_cmd(%w(login -auth node.run_state['splunk_auth_info'])))
+      login = shell_out(splunk_cmd(['login', '-auth', node.run_state['splunk_auth_info']]))
       login.stderr.strip.empty? && login.stdout.strip.empty? && login.exitstatus == 0
     end
 
@@ -124,7 +124,7 @@ module ChefSplunk
     end
 
     def splunk_service_provider
-      if node['init_package'] == 'systemd'
+      if systemd?
         Chef::Provider::Service::Systemd
       else
         Chef::Provider::Service::Init
@@ -269,7 +269,8 @@ module ChefSplunk
     end
 
     def systemd?
-      node['init_package'] == 'systemd'
+      ps1 = shell_out('ps --no-headers 1')
+      ps1.stdout.strip.match?(/systemd/)
     end
   end
 end

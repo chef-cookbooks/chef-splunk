@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@main
       - name: Run Chef Delivery
-        uses: actionshub/chef-delivery@master
+        uses: actionshub/chef-delivery@1.0.0
         env:
           CHEF_LICENSE: accept-no-persist
 
@@ -22,17 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@main
       - name: Run yaml Lint
-        uses: actionshub/yamllint@master
+        uses: actionshub/yamllint@1.0.0
 
   mdl:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@main
       - name: Run Markdown Lint
-        uses: actionshub/markdownlint@master
+        uses: actionshub/markdownlint@2.0.2
 
   dokken:
     needs: [mdl, yamllint, delivery]
@@ -66,11 +66,11 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@main
       - name: Install Chef
-        uses: actionshub/chef-install@master
+        uses: actionshub/chef-install@2.0.1
       - name: Dokken
-        uses: actionshub/kitchen-dokken@master
+        uses: actionshub/kitchen-dokken@1.0.1
         env:
           CHEF_LICENSE: accept-no-persist
           KITCHEN_LOCAL_YAML: kitchen.dokken.yml
@@ -82,11 +82,11 @@ jobs:
         run: |
             set -x
             sudo journalctl -l --since today
-            KITCHEN_LOCAL_YAML=kitchen.dokken.yml /usr/bin/kitchen exec ${{ matrix.suite }}-${{ matrix.os }} -c "journalctl -l"
+            KITCHEN_LOCAL_YAML=kitchen.dokken.yml kitchen exec ${{ matrix.suite }}-${{ matrix.os }} -c "journalctl -l"
 
   final:
     needs: [dokken]
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@main

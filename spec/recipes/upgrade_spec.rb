@@ -4,7 +4,7 @@ describe 'chef-splunk::upgrade' do
   let(:url) { 'http://splunk.example.com/server/package437.deb' }
 
   let(:chef_run) do
-    ChefSpec::ServerRunner.new(platform: 'ubuntu', version: '16.04') do |node, server|
+    ChefSpec::ServerRunner.new do |node, server|
       create_data_bag_item(server, 'vault', 'splunk__default')
       node.force_default['splunk']['upgrade_enabled'] = true
       node.force_default['splunk']['accept_license'] = true

@@ -14,14 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 provides :splunk_installer
 resource_name :splunk_installer
+unified_mode true
 
 property :url, String
 property :package_name, String, name_property: true
 property :version, String
 
 action_class do
+  include ::ChefSplunk::Helpers
+
   def package_file
     if new_resource.url.empty? || new_resource.url.nil?
       "#{new_resource.package_name}-#{new_resource.version}"
@@ -123,24 +127,28 @@ action :remove do
     action :delete
   end
 
-  startup_files = if server? && systemd?
-                    [
-                      '/etc/systemd/system/splunk.service',
-                      '/etc/systemd/system/Splunkd.service',
-                    ]
-                  elsif systemd?
-                    [
-                      '/etc/systemd/system/splunk.service',
-                      '/etc/systemd/system/SplunkForwarder.service',
-                    ]
-                  else
-                    [ '/etc/init.d/splunk' ]
-                  end
+  %w(splunk.service Splunkd.service SplunkForwarder.service).each do |name|
+    systemd_unit name do
+      action :delete
+      triggers_reload true
+    end
+  end
 
-  (startup_files << cached_package).each do |f|
+  # this systemd service is actually a symlink, so it needs to be handled differently
+  link '/etc/systemd/system/splunk.service' do
+    action :delete
+    notifies :reload, 'systemd_unit[splunk.service]'
+  end
+
+  execute 'systemctl daemon-reload' do
+    not_if 'test -z `systemctl list-units --full -all | grep -i splunk`'
+  end
+
+  ['/etc/init.d/splunk', cached_package].each do |f|
     file f do
       action :delete
       backup false
+      manage_symlink_source false
     end
   end
 

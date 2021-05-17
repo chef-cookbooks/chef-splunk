@@ -6,7 +6,9 @@ control 'Enterprise Splunk' do
   only_if { os.linux? }
 
   describe 'chef-splunk::server should run as "root" user' do
-    describe processes(/splunkd.*-p 8089 _internal_launch_under_systemd/) do
+    describe processes(/splunkd/) do
+      it { should exist }
+      its('users') { should_not include 'splunk' }
       its('users') { should include 'root' }
     end
   end
@@ -48,18 +50,6 @@ control 'Enterprise Splunk' do
   end
 
   describe.one do
-    describe processes(Regexp.new('splunkd.*-p 8089 _internal_launch_under_systemd')) do
-      its('users') { should include 'splunk' }
-      its('users') { should_not include 'root' }
-      it { should exist }
-    end
-    describe processes(Regexp.new('splunkd.*-p 8089 _internal_launch_under_systemd')) do
-      its('users') { should include 'root' }
-      it { should exist }
-    end
-  end
-
-  describe.one do
     describe file('/etc/systemd/system/Splunkd.service') do
       it { should exist }
       it { should be_file }
@@ -78,8 +68,7 @@ control 'Splunk admin password validation' do
   only_if { os.linux? }
 
   describe file("#{SPLUNK_HOME}/etc/system/local/user-seed.conf") do
-    it { should exist }
-    its('content') { should match /HASHED_PASSWORD/ }
+    it { should_not exist }
   end
 
   describe.one do
